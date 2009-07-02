@@ -39,13 +39,14 @@ def new_commit(orig_commit, ui, repo, *pats, **opts):
     for chunk in diff:
         chunklines = chunk.splitlines()
         for line in chunklines:
-            if line.startswith('+') and 'print' in line:
+            if line.startswith('+') and line[1:].strip().startswith('print '):
                 ui.warn('Smelly change (print statement):\n')
                 colorwrap(ui.write, chunk)
                 smelly += 1
                 break
     if smelly:
-        if not ui.prompt('Found %d smelly changes. Continue (y/N)?' % smelly,
+        if not ui.prompt('Found %d smelly change%s. Continue (y/N)?' %
+                         (smelly, smelly != 1 and 's' or ''),
                          default='n').lower().startswith('y'):
             return
     return orig_commit(ui, repo, *pats, **opts)
