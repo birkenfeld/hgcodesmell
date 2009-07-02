@@ -33,15 +33,25 @@ try:
 except ImportError:
     colorwrap = lambda o, s: o(s)
 
+print_re = re.compile(r'\+\s*print\b')
+
 def new_commit(orig_commit, ui, repo, *pats, **opts):
     smelly = 0
     diff = patch.diff(repo, *cmdutil.revpair(repo, None))
     for chunk in diff:
         chunklines = chunk.splitlines()
-        for line in chunklines:
-            if line.startswith('+') and line[1:].strip().startswith('print '):
+        indexline = 0
+        hunkstart = 0
+        for i, line in enumerate(chunklines):
+            if line.startswith('diff'):
+                indexline = i
+            elif line.startswith('@@'):
+                hunkstart = i
+            elif print_re.match(line):
                 ui.warn('Smelly change (print statement):\n')
-                colorwrap(ui.write, chunk)
+                colorwrap(ui.write,
+                          '\n'.join(chunklines[indexline:indexline+3]
+                                    + chunklines[hunkstart:i+4] + ['']))
                 smelly += 1
                 break
     if smelly:
