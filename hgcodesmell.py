@@ -37,14 +37,15 @@ BAD_STUFF = [
     (re.compile(r'^\+\s*print\b'), 'print statement'),
     (re.compile(r'^\+\s*1/0'), 'zero division error'),
     (re.compile(r'\bpdb\.set_trace\(\)'), 'set_trace'),
-    (re.compile(r':(w|wq|q|x)$'), 'stupid vim command'),
+    (re.compile(r':(w|wq|q|x)$', re.M), 'stupid vim command'),
+    (re.compile(r'\r'), 'Windows newline'),
 ]
 
 def new_commit(orig_commit, ui, repo, *pats, **opts):
     smelly = 0
     diff = patch.diff(repo, *cmdutil.revpair(repo, None))
     for chunk in diff:
-        chunklines = chunk.splitlines()
+        chunklines = chunk.splitlines(True)
         indexline = 0
         hunkstart = 0
         for i, line in enumerate(chunklines):
@@ -57,8 +58,8 @@ def new_commit(orig_commit, ui, repo, *pats, **opts):
                     if rex.search(line):
                         ui.warn('Smelly change (%s):\n' % reason)
                         colorwrap(ui.write,
-                                  '\n'.join(chunklines[indexline:indexline+3]
-                                            + chunklines[hunkstart:i+4] + ['']))
+                                  ''.join(chunklines[indexline:indexline+3]
+                                          + chunklines[hunkstart:i+4]))
                         smelly += 1
                         break
                 else:
