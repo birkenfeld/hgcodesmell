@@ -28,12 +28,12 @@
 """
 import re
 from mercurial import commands, cmdutil, extensions, patch
+try:
+    from hgext.color import colorwrap
+except ImportError:
+    colorwrap = lambda o, s: o(s)
 
 def new_commit(orig_commit, ui, repo, *pats, **opts):
-    try:
-        from hgext.color import colorwrap
-    except ImportError:
-        colorwrap = lambda o, s: o(s)
     smelly = 0
     diff = patch.diff(repo, *cmdutil.revpair(repo, None))
     for chunk in diff:
