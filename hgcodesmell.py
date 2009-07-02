@@ -34,7 +34,10 @@ except ImportError:
     colorwrap = lambda o, s: o(s)
 
 BAD_STUFF = [
-    (re.compile(r'\+\s*print\b'), 'print statement'),
+    (re.compile(r'^\+\s*print\b'), 'print statement'),
+    (re.compile(r'^\+\s*1/0'), 'zero division error'),
+    (re.compile(r'\bpdb\.set_trace\(\)'), 'set_trace'),
+    (re.compile(r':(w|wq|q|x)$'), 'stupid vim command'),
 ]
 
 def new_commit(orig_commit, ui, repo, *pats, **opts):
@@ -51,7 +54,7 @@ def new_commit(orig_commit, ui, repo, *pats, **opts):
                 hunkstart = i
             elif line.startswith('+'):
                 for rex, reason in BAD_STUFF:
-                    if rex.match(line):
+                    if rex.search(line):
                         ui.warn('Smelly change (%s):\n' % reason)
                         colorwrap(ui.write,
                                   '\n'.join(chunklines[indexline:indexline+3]
