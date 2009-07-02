@@ -33,7 +33,9 @@ try:
 except ImportError:
     colorwrap = lambda o, s: o(s)
 
-print_re = re.compile(r'\+\s*print\b')
+BAD_STUFF = [
+    (re.compile(r'\+\s*print\b'), 'print statement'),
+]
 
 def new_commit(orig_commit, ui, repo, *pats, **opts):
     smelly = 0
@@ -47,12 +49,17 @@ def new_commit(orig_commit, ui, repo, *pats, **opts):
                 indexline = i
             elif line.startswith('@@'):
                 hunkstart = i
-            elif print_re.match(line):
-                ui.warn('Smelly change (print statement):\n')
-                colorwrap(ui.write,
-                          '\n'.join(chunklines[indexline:indexline+3]
-                                    + chunklines[hunkstart:i+4] + ['']))
-                smelly += 1
+            elif line.startswith('+'):
+                for rex, reason in BAD_STUFF:
+                    if rex.match(line):
+                        ui.warn('Smelly change (%s):\n' % reason)
+                        colorwrap(ui.write,
+                                  '\n'.join(chunklines[indexline:indexline+3]
+                                            + chunklines[hunkstart:i+4] + ['']))
+                        smelly += 1
+                        break
+                else:
+                    continue
                 break
     if smelly:
         if not ui.prompt('Found %d smelly change%s. Continue (y/N)?' %
