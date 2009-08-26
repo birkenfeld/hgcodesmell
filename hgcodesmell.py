@@ -26,7 +26,7 @@
         with this program; if not, write to the Free Software Foundation, Inc.,
         51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-import re
+import re, os
 from mercurial import commands, cmdutil, extensions, patch
 try:
     from hgext.color import colorwrap
@@ -38,12 +38,15 @@ BAD_STUFF = [
     (re.compile(r'^\+\s*1/0'), 'zero division error'),
     (re.compile(r'\bpdb\.set_trace\(\)'), 'set_trace'),
     (re.compile(r':(w|wq|q|x)$', re.M), 'stupid vim command'),
-    (re.compile(r'\r'), 'Windows newline'),
 ]
+
+if os.name != 'nt':
+    BAD_STUFF.append((re.compile(r'\r'), 'Windows newline'))
 
 def new_commit(orig_commit, ui, repo, *pats, **opts):
     smelly = 0
-    diff = patch.diff(repo, *cmdutil.revpair(repo, None))
+    match = cmdutil.match(repo, pats, opts)
+    diff = patch.diff(repo, *cmdutil.revpair(repo, None), match=match)
     for chunk in diff:
         chunklines = chunk.splitlines(True)
         indexline = 0
