@@ -1,0 +1,29 @@
+Mercurial codesmell extension
+=============================
+
+This extension hooks in before commit and checks added lines for common
+"smelly" changes.  If it finds any, it will show them and prompt whether
+to continue committing.
+
+To enable, activate it in your hgrc file like this:
+
+    [extensions]
+    hgcodesmell = path/to/hgcodesmell.py
+
+There is currently no other configuration you can set.
+
+
+Smelly patterns that are currently recognized are:
+
+* pdb.set_trace(), in Python files
+* 1/0, in Python files
+* print statements, in Python files
+  (I know this is going to produce false positives, but print statements
+  are also the debugging tool #1 for Python)
+* vim "quit" commands that leak into the file because of wrong mode
+* Windows newlines (only on non-Windows platforms)
+
+You can add more of them by editing hgcodesmell.py's SMELLY_STUFF dictionary.
+
+This extension is copyright 2009, 2010 by Georg Brandl, and can be
+distributed under the GNU GPL version 2 or later.
