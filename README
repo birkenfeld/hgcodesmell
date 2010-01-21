@@ -22,6 +22,7 @@ Smelly patterns that are currently recognized are:
   are also the debugging tool #1 for Python)
 * vim "quit" commands that leak into the file because of wrong mode
 * Windows newlines (only on non-Windows platforms)
+* debugger; statements inside of Javascript files
 
 You can add more of them by editing hgcodesmell.py's SMELLY_STUFF dictionary.
 
