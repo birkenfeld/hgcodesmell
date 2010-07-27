@@ -62,9 +62,17 @@ if os.name != 'nt':
 
 
 def new_commit(orig_commit, ui, repo, *pats, **opts):
-    match = cmdutil.match(repo, pats, opts)
-    diff = patch.diff(repo, *cmdutil.revpair(repo, None), match=match)
     smelly_count = 0
+    match = cmdutil.match(repo, pats, opts)
+    revs = cmdutil.revpair(repo, None)
+    changes = repo.status(*revs, match=match)
+    if changes[1]:
+        # check if any added files would be ignored
+        for fn in changes[1]:
+            if repo.dirstate._ignore(fn):
+                ui.warn('File %r added, but it would be ignored.\n' % fn)
+                smelly_count += 1
+    diff = patch.diff(repo, *revs, match=match)
     smellies = []
     for chunk in diff:
         chunklines = chunk.splitlines(True)
