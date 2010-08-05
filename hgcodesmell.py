@@ -35,12 +35,6 @@ import fnmatch
 
 from mercurial import commands, cmdutil, extensions, patch
 
-try:
-    # use the color extension to render diffs, if it is recent enough
-    from hgext.color import colorwrap
-except ImportError:
-    colorwrap = lambda o, s: o(s)
-
 # smelly patterns are tuples (regex, reason)
 print_stmt = (re.compile(r'^\+\s*print\b'), 'print statement')
 debugger_stmt = (re.compile(r'^\+\s*debugger;'), 'javascript debugger')
@@ -48,12 +42,13 @@ zero_div = (re.compile(r'^\+\s*1/0'), 'zero division error')
 set_trace = (re.compile(r'\bpdb\.set_trace\(\)'), 'set_trace')
 vim_cmd = (re.compile(r':(w|wq|q|x)$', re.M), 'vim exit command')
 windows_nl = (re.compile(r'\r'), 'Windows newline')
+merged_file = (re.compile(r'(>>>>>>>|<<<<<<<)'), 'Merged file')
 
 # the master dict maps glob patterns to a list of smelly patterns
 SMELLY_STUFF = {
     '*.js': [debugger_stmt,],
     '*.py': [print_stmt, zero_div, set_trace],
-    '*': [vim_cmd],
+    '*': [vim_cmd, merged_file],
 }
 
 if os.name != 'nt':
@@ -88,7 +83,7 @@ def new_commit(orig_commit, ui, repo, *pats, **opts):
                         ui.warn('Smelly change (%s):\n' % reason)
                         diff = ''.join(chunklines[indexline:indexline+3]
                                        + chunklines[hunkstart:i+4])
-                        colorwrap(ui.write, diff)
+                        ui.write(diff)
                         smelly_count += 1
                         break
                 else:
