@@ -59,13 +59,13 @@ zero_div = (re.compile(r'^\+\s*1/0'), 'zero division error')
 set_trace = (re.compile(r'\bpdb\.set_trace\(\)'), 'set_trace')
 vim_cmd = (re.compile(r':(w|wq|q|x)$', re.M), 'vim exit command')
 windows_nl = (re.compile(r'\r'), 'Windows newline')
-merged_file = (re.compile(r'(>>>>>>>|<<<<<<<)'), 'Merged file')
+merge_marker = (re.compile(r'^(>>>>>>>|<<<<<<<)'), 'merge marker')
 
 # the master dict maps glob patterns to a list of smelly patterns
 SMELLY_STUFF = {
-    '*.js': [debugger_stmt,],
+    '*.js': [debugger_stmt],
     '*.py': [print_stmt, zero_div, set_trace],
-    '*': [vim_cmd, merged_file],
+    '*': [vim_cmd, merge_marker],
 }
 
 if os.name != 'nt':
