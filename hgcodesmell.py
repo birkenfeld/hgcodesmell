@@ -37,9 +37,20 @@ from mercurial import commands, cmdutil, extensions, patch
 
 try:
     # use the color extension to render diffs, if it is recent enough
-    from hgext.color import colorwrap
+    from hgext import color
+    if hasattr(color, 'colorwrap'):
+        def write_colored(ui, diff):
+            color.colorwrap(ui.write, ''.join(diff))
+    elif hasattr(color, 'render_effects'):
+        # hg 1.6: different API
+        def write_colored(ui, diff):
+            for output, label in patch.difflabel(lambda: diff):
+                ui.write(output, label=label)
+    else:
+        raise ImportError
 except ImportError:
-    colorwrap = lambda o, s: o(s)
+    def write_colored(ui, diff):
+        ui.write(''.join(diff))
 
 # smelly patterns are tuples (regex, reason)
 print_stmt = (re.compile(r'^\+\s*print\b'), 'print statement')
@@ -94,9 +105,9 @@ def new_commit(orig_commit, ui, repo, *pats, **opts):
                 for rex, reason in smellies:
                     if rex.search(line):
                         ui.warn('Smelly change (%s):\n' % reason)
-                        diff = ''.join(chunklines[indexline:indexline+3]
-                                       + chunklines[hunkstart:i+4])
-                        colorwrap(ui.write, diff)
+                        diff = chunklines[indexline:indexline+3] + \
+                               chunklines[hunkstart:i+4]
+                        write_colored(ui, diff)
                         smelly_count += 1
                         break
                 else:
