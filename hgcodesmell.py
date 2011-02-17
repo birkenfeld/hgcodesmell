@@ -56,7 +56,7 @@ except ImportError:
 print_stmt = (re.compile(r'^\+\s*print\b'), 'print statement')
 debugger_stmt = (re.compile(r'^\+\s*debugger;'), 'javascript debugger')
 zero_div = (re.compile(r'^\+\s*1/0'), 'zero division error')
-set_trace = (re.compile(r'\bpdb\.set_trace\(\)'), 'set_trace')
+set_trace = (re.compile(r'\bi?pdb\.set_trace\(\)'), 'set_trace')
 vim_cmd = (re.compile(r':(w|wq|q|x)$', re.M), 'vim exit command')
 windows_nl = (re.compile(r'\r'), 'Windows newline')
 merge_marker = (re.compile(r'^(>>>>>>>|<<<<<<<)'), 'merge marker')
