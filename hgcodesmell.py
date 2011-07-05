@@ -82,7 +82,7 @@ if os.name != 'nt':
 
 def new_commit(orig_commit, ui, repo, *pats, **opts):
     smelly_count = 0
-    if not hasattr(repo, 'match'):
+    if util.version() >= '1.9':
         match = utilmodule.match(repo[None], pats, opts)
     else:
         match = utilmodule.match(repo, pats, opts)
