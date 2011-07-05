@@ -33,7 +33,14 @@ import os
 import re
 import fnmatch
 
-from mercurial import commands, cmdutil, extensions, patch
+from mercurial import commands, cmdutil, extensions, patch, util
+
+if util.version() >= '1.9':
+    # cmdutil.match and cmdutil.revpair moved to scmutil
+    from mercurial import scmutil
+    utilmodule = scmutil
+else:
+    utilmodule = cmdutil
 
 try:
     # use the color extension to render diffs, if it is recent enough
@@ -75,8 +82,12 @@ if os.name != 'nt':
 
 def new_commit(orig_commit, ui, repo, *pats, **opts):
     smelly_count = 0
-    match = cmdutil.match(repo, pats, opts)
-    revs = cmdutil.revpair(repo, None)
+    if not hasattr(repo, 'match'):
+        match = utilmodule.match(repo[None], pats, opts)
+    else:
+        match = utilmodule.match(repo, pats, opts)
+
+    revs = utilmodule.revpair(repo, None)
     changes = repo.status(*revs, match=match)
     if changes[1]:
         # check if any added files would be ignored
