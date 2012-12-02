@@ -30,6 +30,12 @@ msg "Trying to commit file.txt without smell. codesmell should not complain."
 echo "1/0" >> file.txt
 $HG commit -vm "Blah, blah." || die "commit failed"
 
+msg "Trying to commit file.txt with smelling change message. codesmell should complain."
+echo "1/0" >> file.txt
+echo | $HG commit -vm "imported patch blah-blah"
+[ $? -eq 1 ] || die "codesmell didn't exit with error"
+$HG revert -a || die "revert failed"
+
 msg "Removing test repository."
 cd ..
 rm -r repo

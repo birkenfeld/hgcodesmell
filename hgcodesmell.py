@@ -67,6 +67,7 @@ set_trace = (re.compile(r'\bi?pdb\.set_trace\(\)'), 'set_trace')
 vim_cmd = (re.compile(r':(w|wq|q|x)$', re.M), 'vim exit command')
 windows_nl = (re.compile(r'\r'), 'Windows newline')
 merge_marker = (re.compile(r'^(>>>>>>>|<<<<<<<)'), 'merge marker')
+imported_patch = (re.compile(r'^imported patch.*'), 'message from MQ')
 
 # the master dict maps glob patterns to a list of smelly patterns
 SMELLY_STUFF = {
@@ -74,6 +75,7 @@ SMELLY_STUFF = {
     '*.py': [print_stmt, zero_div, set_trace],
     '*': [vim_cmd, merge_marker],
 }
+SMELLY_MESSAGE_STUFF = [imported_patch]
 
 if os.name != 'nt':
     # only pick on Windows newlines if not on Windows
@@ -89,12 +91,19 @@ def new_commit(orig_commit, ui, repo, *pats, **opts):
 
     revs = utilmodule.revpair(repo, None)
     changes = repo.status(*revs, match=match)
+    change_message = opts['message']
     if changes[1]:
         # check if any added files would be ignored
         for fn in changes[1]:
             if repo.dirstate._ignore(fn):
                 ui.warn('File %r added, but it would be ignored.\n' % fn)
                 smelly_count += 1
+    
+    for rex, reason in SMELLY_MESSAGE_STUFF:
+        if rex.match(change_message):
+            ui.warn('Smelly change message (%s)\n' % reason)
+            smelly_count += 1
+            
     diff = patch.diff(repo, *revs, match=match)
     smellies = []
     for chunk in diff:
